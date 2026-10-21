@@ -8,14 +8,36 @@ const modes = {
   desk: { title: '책상 엎기', description: '어질러진 물건과 함께 답답함도 날려요.', rate: 12, impact: 'FLIP!', color: '#c7adff', animation: 'flip' },
   laptop: { title: '노트북 부수기', description: '끝나지 않는 업무는 오늘만큼은 강제 종료!', rate: 14, impact: 'CRASH!', color: '#8ceddb', animation: 'smash' }
 };
-const icons = { foam: '🔨', glove: '🥊', bat: '🏏', meteor: '☄️' };
+const extraItems = [
+  ['레몬 팡팡 망치', '🍋', 'foam'], ['구름 펀치', '☁️', 'glove'], ['캔디 스틱', '🍭', 'bat'],
+  ['별가루 해머', '⭐', 'meteor'], ['딸기 쿠션 망치', '🍓', 'foam'], ['번개 글러브', '⚡', 'glove'],
+  ['네온 배트', '🌈', 'bat'], ['달빛 해머', '🌙', 'meteor'], ['젤리 망치', '🍬', 'foam'],
+  ['로켓 펀치', '🚀', 'glove'], ['소다 배트', '🥤', 'bat'], ['코멧 해머', '💫', 'meteor'],
+  ['도넛 망치', '🍩', 'foam'], ['용암 글러브', '🌋', 'glove'], ['홀로그램 배트', '🔮', 'bat'],
+  ['오로라 해머', '🌌', 'meteor'], ['솜사탕 망치', '🍬', 'foam'], ['태풍 글러브', '🌪️', 'glove'],
+  ['디스코 배트', '🪩', 'bat'], ['태양 해머', '☀️', 'meteor'], ['복숭아 망치', '🍑', 'foam'],
+  ['슈퍼노바 펀치', '✨', 'glove'], ['사파이어 배트', '💎', 'bat'], ['은하수 해머', '🌠', 'meteor'],
+  ['마카롱 망치', '🧁', 'foam'], ['플라즈마 글러브', '🔥', 'glove'], ['루비 배트', '❤️', 'bat'],
+  ['블랙홀 해머', '🕳️', 'meteor'], ['버블 망치', '🫧', 'foam'], ['크리스털 펀치', '🧊', 'glove'],
+  ['황금 배트', '🏆', 'bat'], ['천둥 해머', '🌩️', 'meteor'], ['판다 쿠션 망치', '🐼', 'foam'],
+  ['드래곤 글러브', '🐉', 'glove'], ['프리즘 배트', '🔷', 'bat'], ['피닉스 해머', '🪶', 'meteor'],
+  ['행운 망치', '🍀', 'foam'], ['챔피언 펀치', '🏅', 'glove'], ['왕관 배트', '👑', 'bat'],
+  ['우주왕 해머', '🪐', 'meteor'], ['드림 망치', '💭', 'foam'], ['무지개 폭풍 글러브', '🌈', 'glove'],
+  ['전설의 배트', '🏏', 'bat'], ['별빛 폭발 해머', '💥', 'meteor'], ['초월 쿠션 망치', '🎇', 'foam'],
+  ['궁극의 스트레스 브레이커', '🌟', 'meteor']
+];
 const shop = {
-  foam: { name: '폭신 망치', price: 0, bonus: 0 },
-  glove: { name: '파워 글러브', price: 180, bonus: 2 },
-  bat: { name: '무지개 배트', price: 480, bonus: 5 },
-  meteor: { name: '메테오 해머', price: 950, bonus: 10 }
+  foam: { name: '폭신 망치', icon: '🔨', style: 'foam', hue: 0, price: 0, bonus: 0 },
+  glove: { name: '파워 글러브', icon: '🥊', style: 'glove', hue: 0, price: 180, bonus: 2 },
+  bat: { name: '무지개 배트', icon: '🏏', style: 'bat', hue: 0, price: 480, bonus: 5 },
+  meteor: { name: '메테오 해머', icon: '☄️', style: 'meteor', hue: 0, price: 950, bonus: 10 },
+  ...Object.fromEntries(extraItems.map(([name, icon, style], index) => [
+    `item${index + 5}`,
+    { name, icon, style, hue: (index * 47 + 35) % 360, price: 1150 + index * 170 + index * index * 35, bonus: 12 + Math.floor(index * 1.6) }
+  ]))
 };
 const changelog = [
+  { version: '1.4.0', date: '2026.10.21', changes: ['상점 아이템을 50종으로 확대', '상위 아이템일수록 가격과 액션 포인트 보너스 증가', '새 아이템의 색상별 타격 연출과 효과음 추가'] },
   { version: '1.3.0', date: '2026.10.21', changes: ['빠른 아케이드 비트 배경음 추가', '장면과 장착 도구에 맞는 효과음 추가', '배경음과 효과음을 각각 켜고 끄는 설정 추가'] },
   { version: '1.2.0', date: '2026.10.21', changes: ['로그인 없이 바로 플레이', '포인트·아이템·기록을 브라우저에 자동 저장', '이전 계정 기록 선택 가져오기'] },
   { version: '1.1.0', date: '2026.10.21', changes: ['인형 얼굴의 멍 누적', '서류가 찢어진 조각으로 남는 연출', '장착 아이템의 타격 모션', '책상과 노트북의 손상 단계'] },
@@ -98,7 +120,7 @@ function renderUser() {
   $('#stat-hits').textContent = format(user.hits);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   $('#stat-today').textContent = format(user.today === today ? user.todayPoints : 0);
-  $('#tool-icon').textContent = icons[user.equipped];
+  $('#tool-icon').textContent = shop[user.equipped]?.icon || '🔨';
   $('#tool-name').textContent = shop[user.equipped]?.name || '폭신 망치';
   $('#mode-rate').textContent = `+${modes[mode].rate + (shop[user.equipped]?.bonus || 0)} PT / HIT`;
   if (panel === 'shop') renderShop();
@@ -118,11 +140,11 @@ function openPanel(name) {
 }
 function closePanel() { panel = null; $('#panel-modal').classList.add('hidden'); }
 function renderShop() {
-  $('#panel-content').innerHTML = `<div class="shop-wallet"><span>내 보유 포인트</span><b>✦ ${format(user.points)} PT</b></div><div class="shop-list">${Object.entries(shop).map(([id, item]) => {
+  $('#panel-content').innerHTML = `<div class="shop-wallet"><span>내 보유 포인트</span><b>✦ ${format(user.points)} PT</b></div><div class="shop-progress">아이템 ${Object.keys(shop).length}종 · 보유 ${user.owned.length}종</div><div class="shop-list">${Object.entries(shop).map(([id, item], index) => {
     const owned = user.owned.includes(id);
     const equipped = user.equipped === id;
     const label = equipped ? '장착 중' : owned ? '장착하기' : `${format(item.price)} PT`;
-    return `<div class="shop-item"><div class="shop-symbol">${icons[id]}</div><div class="shop-details"><strong>${item.name}</strong><small>${item.bonus ? `액션마다 +${item.bonus} 포인트` : '기본 아이템 · 편안한 타격감'}</small></div><button data-item="${id}" data-task="${owned ? 'equip' : 'buy'}" ${equipped || (!owned && user.points < item.price) ? 'disabled' : ''}>${label}</button></div>`;
+    return `<div class="shop-item"><div class="shop-symbol">${item.icon}</div><div class="shop-details"><strong><span class="shop-rank">#${index + 1}</span> ${item.name}</strong><small>${item.bonus ? `액션마다 +${item.bonus} 포인트` : '기본 아이템 · 편안한 타격감'}</small></div><button data-item="${id}" data-task="${owned ? 'equip' : 'buy'}" ${equipped || (!owned && user.points < item.price) ? 'disabled' : ''}>${label}</button></div>`;
   }).join('')}</div>`;
 }
 function renderHistory() {
@@ -174,7 +196,8 @@ function animateParticles() {
 }
 function playWeapon(tool) {
   const swing = $('#weapon-swing');
-  swing.className = `weapon-swing tool-${mode === 'paper' ? 'tear' : mode === 'desk' ? 'push' : tool}`;
+  swing.className = `weapon-swing tool-${mode === 'paper' ? 'tear' : mode === 'desk' ? 'push' : shop[tool].style}`;
+  swing.style.setProperty('--tool-hue', `${shop[tool].hue}deg`);
   void swing.offsetWidth;
   swing.classList.add('swing');
 }
@@ -214,7 +237,7 @@ function action(x, y) {
   sceneDamage[actionMode] = sceneDamage[actionMode] >= maxDamage[actionMode] ? 1 : sceneDamage[actionMode] + 1;
   applyDamage();
   hitEffect(x, y, combo, tool);
-  try { audio.playAction(actionMode, tool, combo); } catch (error) { console.warn('Sound unavailable:', error); }
+  try { audio.playAction(actionMode, shop[tool].style, combo); } catch (error) { console.warn('Sound unavailable:', error); }
 }
 
 $$('.scene-link').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; renderScene(); }));
