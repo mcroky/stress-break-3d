@@ -37,6 +37,7 @@ const shop = {
   ]))
 };
 const changelog = [
+  { version: '1.5.1', date: '2026.10.21', changes: ['대상을 완전히 부수면 잠시 뒤 새 대상으로 자동 복구', '복구 대기 중 중복 타격과 포인트 획득 방지'] },
   { version: '1.5.0', date: '2026.10.21', changes: ['대상별 파손 단계를 12~20회로 확대하고 완전 파손 상태 유지', '노트북 화면 파손과 책상 붕괴 연출 강화', '장면별 파편·섬광·충격파·대상 레벨 추가'] },
   { version: '1.4.1', date: '2026.10.21', changes: ['상단에 로키 스튜디오로 돌아가기 버튼 추가'] },
   { version: '1.4.0', date: '2026.10.21', changes: ['상점 아이템을 50종으로 확대', '상위 아이템일수록 가격과 액션 포인트 보너스 증가', '새 아이템의 색상별 타격 연출과 효과음 추가'] },
@@ -68,6 +69,7 @@ const maxDamage = { boss: 18, paper: 12, desk: 16, laptop: 20 };
 const visualDamageSteps = { boss: 6, paper: 4, desk: 4, laptop: 5 };
 const damageNames = { boss: '멍', paper: '찢김', desk: '흩어진 물건', laptop: '균열' };
 const sceneDamage = { boss: 0, paper: 0, desk: 0, laptop: 0 };
+const resetTimers = { boss: null, paper: null, desk: null, laptop: null };
 const targetLevel = id => Math.floor(Math.sqrt((user.modeHits[id] || 0) / 8)) + 1;
 let user = loadProgress();
 let legacyRecords = [];
@@ -107,7 +109,7 @@ function applyDamage() {
     object.style.setProperty('--wear-angle', `${sceneDamage[mode] / maxDamage[mode] * -20}deg`);
     object.style.setProperty('--level-hue', `${Math.max(0, targetLevel(mode) - 5) * 43 % 360}deg`);
   }
-  $('#damage-label').textContent = `${damageNames[mode]} ${sceneDamage[mode]} / ${maxDamage[mode]}${sceneDamage[mode] === maxDamage[mode] ? ' · 완전 파손!' : ''}`;
+  $('#damage-label').textContent = `${damageNames[mode]} ${sceneDamage[mode]} / ${maxDamage[mode]}${sceneDamage[mode] === maxDamage[mode] ? ' · 새 대상 준비 중...' : ''}`;
   const level = targetLevel(mode);
   $('#target-level').textContent = `LV ${level} · 다음 단계 ${8 * level * level - user.modeHits[mode]} HIT`;
   $('#reset-button').textContent = mode === 'paper' ? '새 서류 ↺' : mode === 'boss' ? '새 인형 ↺' : mode === 'desk' ? '책상 정리 ↺' : '새 노트북 ↺';
@@ -123,6 +125,16 @@ function renderScene() {
   rotateY = -19;
   updateRotation();
   applyDamage();
+}
+function resetTarget(id) {
+  clearTimeout(resetTimers[id]);
+  resetTimers[id] = null;
+  sceneDamage[id] = 0;
+  if (mode === id) renderScene();
+}
+function scheduleTargetReset(id) {
+  if (resetTimers[id] !== null) return;
+  resetTimers[id] = setTimeout(() => resetTarget(id), 1250);
 }
 function updateRotation() { $('#orbit-scene').style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`; }
 function renderUser() {
@@ -263,6 +275,7 @@ function hitEffect(x, y, combo, tool, earned, leveledUp) {
   burst(x, y);
 }
 function action(x, y) {
+  if (sceneDamage[mode] >= maxDamage[mode]) return;
   const now = Date.now();
   if (now - lastAction < 185) return;
   combo = now - lastAction < 2200 ? Math.min(combo + 1, 20) : 1;
@@ -284,6 +297,7 @@ function action(x, y) {
   applyDamage();
   hitEffect(x, y, combo, tool, earned, targetLevel(actionMode) > previousLevel);
   try { audio.playAction(actionMode, shop[tool].style, combo); } catch (error) { console.warn('Sound unavailable:', error); }
+  if (sceneDamage[actionMode] >= maxDamage[actionMode]) scheduleTargetReset(actionMode);
 }
 
 $$('.scene-link').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; renderScene(); }));
@@ -324,7 +338,7 @@ $('#panel-content').addEventListener('click', event => {
 $('#profile-button').addEventListener('click', () => $('#profile-menu').classList.toggle('hidden'));
 $('#import-button').addEventListener('click', () => { $('#profile-menu').classList.add('hidden'); openPanel('import'); });
 $('#action-button').addEventListener('click', () => action());
-$('#reset-button').addEventListener('click', () => { sceneDamage[mode] = 0; renderScene(); });
+$('#reset-button').addEventListener('click', () => resetTarget(mode));
 $('#arena').addEventListener('pointerdown', event => { dragging = { x: event.clientX, y: event.clientY, moved: false }; $('#arena').setPointerCapture(event.pointerId); });
 $('#arena').addEventListener('pointermove', event => {
   if (!dragging) return;
