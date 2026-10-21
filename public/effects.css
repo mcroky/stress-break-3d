@@ -25,6 +25,7 @@
 @keyframes headHitHard{25%{transform:translateZ(14px) rotateZ(28deg)}53%{transform:translateZ(14px) rotateZ(-13deg)}}
 .paper-stack.rip{animation:paperRipHard .53s ease-out}@keyframes paperRipHard{0%,100%{transform:translate3d(0,0,0)}28%{transform:translate3d(-20px,-28px,24px) rotateZ(-18deg) scale(1.15)}58%{transform:translate3d(25px,5px,12px) rotateZ(12deg) scale(1.08)}}
 .paper-stack[data-damage="4"] .paper-piece,.paper-stack[data-damage="4"] .paper-debris{filter:drop-shadow(0 0 6px #fff9)}
+.paper-stack[data-damage="2"] .paper-sheet,.paper-stack[data-damage="3"] .paper-sheet{opacity:.48;clip-path:polygon(0 0,48% 0,53% 25%,46% 50%,52% 75%,48% 100%,0 100%)}
 .desk-assembly.flip{animation:deskFlipHard .82s cubic-bezier(.2,.68,.25,1)}@keyframes deskFlipHard{0%,100%{transform:translate3d(0,8px,0)}28%{transform:translate3d(33px,-82px,45px) rotateZ(-24deg) rotateX(27deg)}55%{transform:translate3d(-24px,28px,-20px) rotateZ(16deg) rotateX(-10deg)}76%{transform:translate3d(9px,-13px,10px) rotateZ(-6deg)}}
 .desk-assembly[data-wear]:not([data-wear="0"]) .desk-top{transform:rotateZ(var(--wear-angle));transition:transform .32s ease-out}
 .desk-assembly[data-damage="4"] .desk-top{transform:translate3d(-12px,31px,15px) rotateZ(-25deg) rotateX(18deg)!important}

@@ -37,6 +37,7 @@ const shop = {
   ]))
 };
 const changelog = [
+  { version: '1.5.2', date: '2026.10.21', changes: ['완전 파손 연출과 자동 복구 시점을 일치', '새 대상 등장 알림과 캐시 갱신 적용'] },
   { version: '1.5.1', date: '2026.10.21', changes: ['대상을 완전히 부수면 잠시 뒤 새 대상으로 자동 복구', '복구 대기 중 중복 타격과 포인트 획득 방지'] },
   { version: '1.5.0', date: '2026.10.21', changes: ['대상별 파손 단계를 12~20회로 확대하고 완전 파손 상태 유지', '노트북 화면 파손과 책상 붕괴 연출 강화', '장면별 파편·섬광·충격파·대상 레벨 추가'] },
   { version: '1.4.1', date: '2026.10.21', changes: ['상단에 로키 스튜디오로 돌아가기 버튼 추가'] },
@@ -103,7 +104,8 @@ const scenes = {
 function applyDamage() {
   const object = $('#main-object');
   if (object) {
-    object.dataset.damage = String(sceneDamage[mode] ? Math.ceil(sceneDamage[mode] / maxDamage[mode] * visualDamageSteps[mode]) : 0);
+    const damage = sceneDamage[mode];
+    object.dataset.damage = String(damage === maxDamage[mode] ? visualDamageSteps[mode] : Math.min(visualDamageSteps[mode] - 1, Math.ceil(damage / maxDamage[mode] * visualDamageSteps[mode])));
     object.dataset.wear = String(sceneDamage[mode]);
     object.dataset.tier = String(Math.min(targetLevel(mode), 5));
     object.style.setProperty('--wear-angle', `${sceneDamage[mode] / maxDamage[mode] * -20}deg`);
@@ -126,15 +128,18 @@ function renderScene() {
   updateRotation();
   applyDamage();
 }
-function resetTarget(id) {
+function resetTarget(id, announce = false) {
   clearTimeout(resetTimers[id]);
   resetTimers[id] = null;
   sceneDamage[id] = 0;
-  if (mode === id) renderScene();
+  if (mode === id) {
+    renderScene();
+    if (announce) toast('새 대상이 나왔어요!');
+  }
 }
 function scheduleTargetReset(id) {
   if (resetTimers[id] !== null) return;
-  resetTimers[id] = setTimeout(() => resetTarget(id), 1250);
+  resetTimers[id] = setTimeout(() => resetTarget(id, true), 1250);
 }
 function updateRotation() { $('#orbit-scene').style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`; }
 function renderUser() {
@@ -295,9 +300,9 @@ function action(x, y) {
   renderUser();
   sceneDamage[actionMode] = Math.min(sceneDamage[actionMode] + 1, maxDamage[actionMode]);
   applyDamage();
+  if (sceneDamage[actionMode] >= maxDamage[actionMode]) scheduleTargetReset(actionMode);
   hitEffect(x, y, combo, tool, earned, targetLevel(actionMode) > previousLevel);
   try { audio.playAction(actionMode, shop[tool].style, combo); } catch (error) { console.warn('Sound unavailable:', error); }
-  if (sceneDamage[actionMode] >= maxDamage[actionMode]) scheduleTargetReset(actionMode);
 }
 
 $$('.scene-link').forEach(button => button.addEventListener('click', () => { mode = button.dataset.mode; renderScene(); }));
