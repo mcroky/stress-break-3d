@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#101126">
   <title>스트레스 브레이크 · 3D 오피스 아케이드</title>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./effects.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
@@ -35,8 +36,8 @@
 
         <section class="game-layout">
           <div class="game-card">
-            <div class="game-top"><div><span class="live-tag"><i></i> NOW PLAYING</span><h2 id="mode-title">상사 인형 때리기</h2><p id="mode-description">마음속 말을 담아 펀치! 가상 인형이니까 걱정 없이.</p></div><div class="game-top-right"><span id="mode-rate">+10 PT / HIT</span><span class="sound-label">3D INTERACTIVE</span></div></div>
-            <div class="arena" id="arena" role="button" tabindex="0" aria-label="장면을 클릭하거나 스페이스 키로 액션"><div class="arena-glow"></div><div class="floor-grid"></div><div class="orbit-scene" id="orbit-scene"><div class="scene-shadow"></div><div id="scene-content"></div></div><div class="weapon-swing" id="weapon-swing" aria-hidden="true"><div class="weapon-visual"></div></div><canvas id="particle-canvas"></canvas><div class="impact-text" id="impact-text"></div><div class="combo-display" id="combo-display"></div><div class="damage-label" id="damage-label">멍 0 / 6</div><div class="arena-corner top-left">◈ INTERACTIVE 3D SPACE</div><div class="arena-corner bottom-right">DRAG TO ROTATE · CLICK TO PLAY</div></div>
+            <div class="game-top"><div><span class="live-tag"><i></i> NOW PLAYING</span><h2 id="mode-title">상사 인형 때리기</h2><p id="mode-description">마음속 말을 담아 펀치! 가상 인형이니까 걱정 없이.</p></div><div class="game-top-right"><span id="mode-rate">+10 PT / HIT</span><span class="target-level" id="target-level">LV 1 · 다음 단계 8 HIT</span></div></div>
+            <div class="arena" id="arena" role="button" tabindex="0" aria-label="장면을 클릭하거나 스페이스 키로 액션"><div class="arena-glow"></div><div class="floor-grid"></div><div class="orbit-scene" id="orbit-scene"><div class="scene-shadow"></div><div id="scene-content"></div></div><div class="weapon-swing" id="weapon-swing" aria-hidden="true"><div class="weapon-visual"></div></div><div class="impact-flash" id="impact-flash" aria-hidden="true"></div><div class="impact-ring" id="impact-ring" aria-hidden="true"></div><canvas id="particle-canvas"></canvas><div class="impact-text" id="impact-text"></div><div class="point-pop" id="point-pop" aria-hidden="true"></div><div class="level-notice" id="level-notice" aria-hidden="true"></div><div class="combo-display" id="combo-display"></div><div class="damage-label" id="damage-label">멍 0 / 18</div><div class="arena-corner top-left">◈ INTERACTIVE 3D SPACE</div><div class="arena-corner bottom-right">DRAG TO ROTATE · CLICK TO PLAY</div></div>
             <div class="game-footer"><div class="tool-info"><div class="tool-badge" id="tool-icon">🔨</div><div><small>장착한 아이템</small><strong id="tool-name">폭신 망치</strong></div></div><div class="game-controls"><button class="reset-button" id="reset-button" title="새 대상으로 다시 시작">새 대상 ↺</button><button class="action-button" id="action-button">한 방 날리기 <span>↗</span></button></div></div>
           </div>
           <div class="right-column"><div class="mission-card"><div class="card-heading"><span class="small-spark">✦</span> 오늘의 한마디</div><div class="quote-mark">“</div><p>다 잘하려고<br>애쓰지 않아도<br><em>괜찮아요.</em></p><div class="quote-end">잠깐 쉬어가도 좋아요 <span>☺</span></div></div><div class="tip-card"><div class="tip-icon">⚡</div><h3>콤보를 이어가세요!</h3><p>빠르게 연속 액션하면<br>보너스 포인트를 얻어요.</p><span>5 COMBO마다 +2 PT ↗</span></div><button class="shop-banner" data-panel="shop"><div><small>POWER UP YOUR PLAY</small><strong>아이템으로 더 신나게!</strong><span>상점 둘러보기 →</span></div><b>✳</b></button></div>

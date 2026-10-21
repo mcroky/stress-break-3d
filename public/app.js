@@ -37,6 +37,7 @@ const shop = {
   ]))
 };
 const changelog = [
+  { version: '1.5.0', date: '2026.10.21', changes: ['대상별 파손 단계를 12~20회로 확대하고 완전 파손 상태 유지', '노트북 화면 파손과 책상 붕괴 연출 강화', '장면별 파편·섬광·충격파·대상 레벨 추가'] },
   { version: '1.4.1', date: '2026.10.21', changes: ['상단에 로키 스튜디오로 돌아가기 버튼 추가'] },
   { version: '1.4.0', date: '2026.10.21', changes: ['상점 아이템을 50종으로 확대', '상위 아이템일수록 가격과 액션 포인트 보너스 증가', '새 아이템의 색상별 타격 연출과 효과음 추가'] },
   { version: '1.3.0', date: '2026.10.21', changes: ['빠른 아케이드 비트 배경음 추가', '장면과 장착 도구에 맞는 효과음 추가', '배경음과 효과음을 각각 켜고 끄는 설정 추가'] },
@@ -63,9 +64,11 @@ function saveProgress() {
   try { localStorage.setItem(storageKey, JSON.stringify(user)); }
   catch { toast('브라우저 저장소를 사용할 수 없습니다.'); }
 }
-const maxDamage = { boss: 6, paper: 4, desk: 4, laptop: 5 };
+const maxDamage = { boss: 18, paper: 12, desk: 16, laptop: 20 };
+const visualDamageSteps = { boss: 6, paper: 4, desk: 4, laptop: 5 };
 const damageNames = { boss: '멍', paper: '찢김', desk: '흩어진 물건', laptop: '균열' };
 const sceneDamage = { boss: 0, paper: 0, desk: 0, laptop: 0 };
+const targetLevel = id => Math.floor(Math.sqrt((user.modeHits[id] || 0) / 8)) + 1;
 let user = loadProgress();
 let legacyRecords = [];
 let mode = 'boss';
@@ -92,13 +95,21 @@ function box(extra = '') { return `<div class="box3d ${extra}"><div class="face 
 const scenes = {
   boss: `<div class="object dummy" id="main-object"><div class="object dummy-hair"></div><div class="object dummy-head"><i class="bruise bruise-left"></i><i class="bruise bruise-right"></i><i class="bruise bruise-cheek"></i><i class="bruise bruise-forehead"></i></div><div class="object dummy-face"><span>•</span><span>•</span></div><div class="object dummy-neck"></div>${box('dummy-torso')}<div class="object dummy-shirt"></div><div class="object dummy-tie"></div><div class="object dummy-arm left"><div class="dummy-hand"></div></div><div class="object dummy-arm right"><div class="dummy-hand"></div></div><div class="object dummy-leg left"><div class="dummy-shoe"></div></div><div class="object dummy-leg right"><div class="dummy-shoe"></div></div><div class="dummy-nameplate">BOSS DUMMY<span>100% VIRTUAL</span></div></div>`,
   paper: `<div class="object paper-stack" id="main-object"><div class="paper-sheet"><div class="paper-lines"></div><div class="paper-stamp">DONE!</div></div><div class="paper-tear-line"></div><div class="paper-piece piece-a">CONFIDENTIAL</div><div class="paper-piece piece-b"></div><div class="paper-piece piece-c"></div><div class="paper-piece piece-d">DONE!</div><div class="paper-piece piece-e"></div><div class="paper-piece piece-f"></div>${Array.from({ length: 14 }, (_, i) => `<i class="paper-debris" style="--x:${(i % 7) * 29 - 87}px;--y:${Math.floor(i / 7) * 31 + (i % 3) * 8}px;--r:${i * 43 - 110}deg"></i>`).join('')}</div>`,
-  desk: `<div class="object desk-assembly" id="main-object">${box('desk-top')}${box('desk-leg one')}${box('desk-leg two')}${box('desk-leg three')}${box('desk-leg four')}<div class="object desk-mug"></div>${box('desk-book')}<div class="object desk-pencil"></div>${box('desk-screen')}</div>`,
-  laptop: `<div class="object laptop-assembly" id="main-object">${box('laptop-base')}${box('laptop-display')}<div class="laptop-crack crack-one"></div><div class="laptop-crack crack-two"></div><div class="laptop-crack crack-three"></div></div>`
+  desk: `<div class="object desk-assembly" id="main-object">${box('desk-top')}${box('desk-leg one')}${box('desk-leg two')}${box('desk-leg three')}${box('desk-leg four')}<div class="object desk-mug"></div>${box('desk-book')}<div class="object desk-pencil"></div>${box('desk-screen')}<i class="desk-splinter splinter-one"></i><i class="desk-splinter splinter-two"></i><i class="desk-splinter splinter-three"></i></div>`,
+  laptop: `<div class="object laptop-assembly" id="main-object">${box('laptop-base')}${box('laptop-display')}<div class="laptop-crack crack-one"></div><div class="laptop-crack crack-two"></div><div class="laptop-crack crack-three"></div><i class="laptop-shard shard-one"></i><i class="laptop-shard shard-two"></i><i class="laptop-shard shard-three"></i><i class="laptop-shard shard-four"></i><i class="laptop-shard shard-five"></i></div>`
 };
 function applyDamage() {
   const object = $('#main-object');
-  if (object) object.dataset.damage = String(sceneDamage[mode]);
-  $('#damage-label').textContent = `${damageNames[mode]} ${sceneDamage[mode]} / ${maxDamage[mode]}`;
+  if (object) {
+    object.dataset.damage = String(sceneDamage[mode] ? Math.ceil(sceneDamage[mode] / maxDamage[mode] * visualDamageSteps[mode]) : 0);
+    object.dataset.wear = String(sceneDamage[mode]);
+    object.dataset.tier = String(Math.min(targetLevel(mode), 5));
+    object.style.setProperty('--wear-angle', `${sceneDamage[mode] / maxDamage[mode] * -20}deg`);
+    object.style.setProperty('--level-hue', `${Math.max(0, targetLevel(mode) - 5) * 43 % 360}deg`);
+  }
+  $('#damage-label').textContent = `${damageNames[mode]} ${sceneDamage[mode]} / ${maxDamage[mode]}${sceneDamage[mode] === maxDamage[mode] ? ' · 완전 파손!' : ''}`;
+  const level = targetLevel(mode);
+  $('#target-level').textContent = `LV ${level} · 다음 단계 ${8 * level * level - user.modeHits[mode]} HIT`;
   $('#reset-button').textContent = mode === 'paper' ? '새 서류 ↺' : mode === 'boss' ? '새 인형 ↺' : mode === 'desk' ? '책상 정리 ↺' : '새 노트북 ↺';
 }
 function renderScene() {
@@ -166,32 +177,64 @@ function burst(x, y) {
   const height = $('#arena').clientHeight;
   x ??= width / 2;
   y ??= height * .42;
-  const palette = [modes[mode].color, '#ffffff', '#ffd681', '#bca9ff'];
-  for (let i = 0; i < 28; i++) {
+  const palette = mode === 'laptop' ? ['#bdf8ff', '#ffffff', '#8aedff', '#ffb8d0'] : mode === 'desk' ? ['#e9b28c', '#d7ff76', '#b99aff', '#fff2c1'] : [modes[mode].color, '#ffffff', '#ffd681', '#bca9ff'];
+  for (let i = 0; i < (mode === 'laptop' ? 84 : 64); i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 2 + Math.random() * 6;
-    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1.5, life: 28 + Math.random() * 14, size: 3 + Math.random() * 5, color: palette[i % palette.length], angle: Math.random() * 6 });
+    const speed = 3 + Math.random() * 10;
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2, life: 30 + Math.random() * 24, size: 3 + Math.random() * 8, color: palette[i % palette.length], angle: Math.random() * 6, shape: mode === 'laptop' ? 'glass' : i % 4 === 0 ? 'spark' : 'chip' });
   }
-  if (mode === 'paper') {
-    for (let i = 0; i < 8; i++) {
-      const shred = document.createElement('div');
-      shred.className = 'paper-shred';
-      shred.style.left = `${x + (Math.random() - .5) * 80}px`;
-      shred.style.top = `${y + (Math.random() - .5) * 60}px`;
-      shred.style.setProperty('--dx', `${(Math.random() - .5) * 260}px`);
-      shred.style.setProperty('--dy', `${100 + Math.random() * 120}px`);
-      shred.style.setProperty('--rot', `${(Math.random() - .5) * 550}deg`);
-      $('#arena').append(shred);
-      setTimeout(() => shred.remove(), 750);
-    }
+  particles = particles.slice(-360);
+  const debrisType = mode === 'paper' ? 'paper-shred' : mode === 'laptop' ? 'glass-debris' : mode === 'desk' ? 'desk-debris' : 'star-debris';
+  const count = mode === 'paper' ? 22 : mode === 'laptop' ? 18 : mode === 'desk' ? 15 : 8;
+  for (let i = 0; i < count; i++) {
+    const debris = document.createElement('i');
+    debris.className = `action-debris ${debrisType}`;
+    debris.style.left = `${x + (Math.random() - .5) * 56}px`;
+    debris.style.top = `${y + (Math.random() - .5) * 44}px`;
+    debris.style.setProperty('--dx', `${(Math.random() - .5) * 330}px`);
+    debris.style.setProperty('--dy', `${(Math.random() - .4) * 250}px`);
+    debris.style.setProperty('--rot', `${(Math.random() - .5) * 800}deg`);
+    debris.style.setProperty('--size', `${.55 + Math.random() * 1.1}`);
+    $('#arena').append(debris);
+    setTimeout(() => debris.remove(), 1100);
+  }
+}
+function replayAnimation(element, className) {
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+}
+function impactPulse(x, y, earned, leveledUp) {
+  const arena = $('#arena');
+  x ??= arena.clientWidth / 2;
+  y ??= arena.clientHeight * .42;
+  arena.style.setProperty('--hit-x', `${x}px`);
+  arena.style.setProperty('--hit-y', `${y}px`);
+  arena.style.setProperty('--hit-color', modes[mode].color);
+  replayAnimation(arena, 'hit-shake');
+  replayAnimation($('#impact-flash'), 'show');
+  replayAnimation($('#impact-ring'), 'show');
+  const pop = $('#point-pop');
+  pop.textContent = `+${earned} PT`;
+  pop.style.left = `${Math.min(x + 58, arena.clientWidth - 74)}px`;
+  pop.style.top = `${Math.min(y + 48, arena.clientHeight - 35)}px`;
+  replayAnimation(pop, 'show');
+  if (leveledUp) {
+    const notice = $('#level-notice');
+    notice.textContent = `LEVEL UP!  LV ${targetLevel(mode)}`;
+    replayAnimation(notice, 'show');
   }
 }
 function animateParticles() {
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   particles = particles.filter(p => p.life > 0);
   for (const p of particles) {
-    p.x += p.vx; p.y += p.vy; p.vy += .18; p.vx *= .985; p.life--; p.angle += .1;
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); ctx.globalAlpha = Math.min(1, p.life / 16); ctx.fillStyle = p.color; ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5); ctx.restore();
+    p.x += p.vx; p.y += p.vy; p.vy += .2; p.vx *= .98; p.life--; p.angle += .12;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); ctx.globalAlpha = Math.min(1, p.life / 17); ctx.fillStyle = p.color;
+    if (p.shape === 'glass') { ctx.beginPath(); ctx.moveTo(0, -p.size); ctx.lineTo(p.size * .8, p.size); ctx.lineTo(-p.size * .7, p.size * .5); ctx.fill(); }
+    else if (p.shape === 'spark') ctx.fillRect(-p.size / 4, -p.size * 1.7, p.size / 2, p.size * 3);
+    else ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+    ctx.restore();
   }
   requestAnimationFrame(animateParticles);
 }
@@ -202,7 +245,7 @@ function playWeapon(tool) {
   void swing.offsetWidth;
   swing.classList.add('swing');
 }
-function hitEffect(x, y, combo, tool) {
+function hitEffect(x, y, combo, tool, earned, leveledUp) {
   const object = $('#main-object');
   const animation = modes[mode].animation;
   object.classList.remove(animation);
@@ -216,6 +259,7 @@ function hitEffect(x, y, combo, tool) {
   impact.classList.add('show');
   $('#combo-display').textContent = combo > 1 ? `${combo} COMBO ⚡` : '';
   playWeapon(tool);
+  impactPulse(x, y, earned, leveledUp);
   burst(x, y);
 }
 function action(x, y) {
@@ -225,6 +269,7 @@ function action(x, y) {
   lastAction = now;
   const actionMode = mode;
   const tool = user.equipped;
+  const previousLevel = targetLevel(actionMode);
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   if (user.today !== today) { user.today = today; user.todayPoints = 0; }
   const earned = modes[actionMode].rate + shop[tool].bonus + Math.floor(combo / 5) * 2;
@@ -235,9 +280,9 @@ function action(x, y) {
   user.modeHits[actionMode]++;
   saveProgress();
   renderUser();
-  sceneDamage[actionMode] = sceneDamage[actionMode] >= maxDamage[actionMode] ? 1 : sceneDamage[actionMode] + 1;
+  sceneDamage[actionMode] = Math.min(sceneDamage[actionMode] + 1, maxDamage[actionMode]);
   applyDamage();
-  hitEffect(x, y, combo, tool);
+  hitEffect(x, y, combo, tool, earned, targetLevel(actionMode) > previousLevel);
   try { audio.playAction(actionMode, shop[tool].style, combo); } catch (error) { console.warn('Sound unavailable:', error); }
 }
 

@@ -36,7 +36,7 @@ export class AudioEngine {
       this.musicBus.gain.value = this.musicEnabled ? .38 : 0;
       this.musicBus.connect(this.master);
       this.effectsBus = ctx.createGain();
-      this.effectsBus.gain.value = this.effectsEnabled ? .65 : 0;
+      this.effectsBus.gain.value = this.effectsEnabled ? .78 : 0;
       this.effectsBus.connect(this.master);
       const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
       const samples = buffer.getChannelData(0);
@@ -59,7 +59,7 @@ export class AudioEngine {
     this.effectsEnabled = enabled;
     this.saveSettings();
     if (enabled) this.start();
-    if (this.effectsBus) this.effectsBus.gain.setTargetAtTime(enabled ? .65 : 0, this.context.currentTime, .02);
+    if (this.effectsBus) this.effectsBus.gain.setTargetAtTime(enabled ? .78 : 0, this.context.currentTime, .02);
   }
 
   tone({ frequency, endFrequency, start, duration, level, type = 'sine', bus = this.musicBus, cutoff }) {
@@ -163,6 +163,15 @@ export class AudioEngine {
         this.noise({ start: at + .04, duration: .44, level: .35, frequency: 1200, endFrequency: 180, type: 'bandpass' });
         this.tone({ frequency: 95, endFrequency: 26, start: at + .05, duration: .5, level: .54, bus: this.effectsBus });
       }
+    }
+    if (mode === 'laptop') {
+      this.noise({ start: at + .035, duration: .31, level: .24, frequency: 6200, endFrequency: 850, type: 'highpass' });
+      this.tone({ frequency: 1250, endFrequency: 180, start: at + .08, duration: .24, level: .12, type: 'square', bus: this.effectsBus });
+    } else if (mode === 'desk') {
+      this.noise({ start: at + .07, duration: .38, level: .22, frequency: 950, endFrequency: 150, type: 'bandpass' });
+      this.tone({ frequency: 92, endFrequency: 28, start: at + .06, duration: .4, level: .36, bus: this.effectsBus });
+    } else if (mode === 'paper') {
+      this.noise({ start: at + .09, duration: .28, level: .17, frequency: 4800, endFrequency: 1000, type: 'highpass' });
     }
     if (combo > 1 && combo % 5 === 0) {
       for (let i = 0; i < 3; i++) this.tone({ frequency: midi(72 + i * 4), start: at + .08 + i * .075, duration: .11, level: .075, type: 'triangle', bus: this.effectsBus });
