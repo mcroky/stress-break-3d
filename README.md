@@ -4,7 +4,11 @@
 
 ## 온라인 배포
 
+[게임 바로 실행](https://mcroky.github.io/stress-break-3d/) · [GitHub 저장소](https://github.com/mcroky/stress-break-3d)
+
 GitHub Pages는 `main` 브랜치에 푸시할 때 `.github/workflows/deploy.yml`을 통해 `public/`을 배포합니다. 게임 진행 상황은 접속한 브라우저에만 저장되며, 기기 사이에 동기화되지 않습니다.
+
+상점에는 가격과 액션 포인트 보너스가 단계적으로 올라가는 아이템 50종이 있습니다.
 
 ## 로컬 실행
 
